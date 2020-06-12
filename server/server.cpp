@@ -2,7 +2,6 @@
 #include "connection.h"
 #include "game.h"
 #include <iostream>
-//#include <sstream>
 #include <fstream>
 #include <string>
 #include <map>
@@ -257,8 +256,7 @@ void server::serverSetup(struct sockaddr_in &address, int &server_fd){
     printf("%sGot Socket\n", SERVER);
 
     // Forcefully attach socket to the port
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEADDR,
-                   &opt, sizeof(opt))) {
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEADDR, &opt, sizeof(opt))) {
         perror("ERROR: setsockopt");
         exit(EXIT_FAILURE);
     }
@@ -270,8 +268,7 @@ void server::serverSetup(struct sockaddr_in &address, int &server_fd){
 
     // Forcefully attach socket to the port
     printf("%sAbout to bind\n", SERVER);
-    if (::bind(server_fd, (struct sockaddr *)&address,
-             sizeof(address)) < 0) {
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
         perror("ERROR: bind failed");
         exit(EXIT_FAILURE);
     }
@@ -282,7 +279,6 @@ void server::serverSetup(struct sockaddr_in &address, int &server_fd){
         perror("ERROR: listen");
         return;
     }
-
 }
 
 
@@ -310,8 +306,7 @@ void server::createConnection(struct sockaddr_in &address, int &server_fd) {
     connection *newConnection = new connection(0, server_fd, address);
 
     printf("\n%sWaiting\n", SERVER);
-    if ((newSocket = accept(server_fd, (struct sockaddr *) &address,
-                            (socklen_t *)&addrlen)) < 0) {
+    if ((newSocket = accept(server_fd, (struct sockaddr *) &address, (socklen_t *)&addrlen)) < 0) {
         perror("ERROR: accept");
         exit(EXIT_FAILURE);
     }
@@ -339,7 +334,7 @@ std::vector<std::string> server::splitBuffer(std::string buffer) {
 void server::startGame(connection *myConnection) {
     std::cout << SERVER << "Running Game on Thread #"
               << std::to_string(myConnection->getThreadNum()) << std::endl;
-	sleep(1);
+    sleep(1);
     ssize_t status;  // To check the status of send and read functions
     game g(getRandomWord());
     std::string reply = "type=gameload;mask=" + g.getMask() + ";score="
@@ -387,23 +382,23 @@ void server::startGame(connection *myConnection) {
                             + std::to_string(g.getScore()) + ";";
                 } else {
                     reply = "goodbye;";
-					pthread_mutex_lock(&mutex);
+		    pthread_mutex_lock(&mutex);
 
-					if (g.getTotalScore() > HIGHSCORE) {
-						HIGHSCORE = g.getTotalScore();
-						std::cout << SERVER << "NEW HIGH SCORE!\nSERVER>> Server High Score is now: "
-							<< std::to_string(HIGHSCORE) << " points!\n";
-						reply += std::to_string(HIGHSCORE);
-					} else {
-					    reply += "0";
-					}
+		    if (g.getTotalScore() > HIGHSCORE) {
+		 	HIGHSCORE = g.getTotalScore();
+			std::cout << SERVER << "NEW HIGH SCORE!\nSERVER>> Server High Score is now: "
+			  	  << std::to_string(HIGHSCORE) << " points!\n";
+		 	reply += std::to_string(HIGHSCORE);
+		    } else {
+		        reply += "0";
+		    }
 
-					/// Global variable
-					pthread_mutex_unlock(&mutex);
+		    /// Global variable
+		    pthread_mutex_unlock(&mutex);
                     status = send(myConnection->getSocket(), reply.c_str(), reply.size() + 1, 0);
                     myConnection->closeSocket();
-					std::cout << SERVER << "Closing Game Thread #"
-					          << std::to_string(myConnection->getThreadNum()) << std::endl;
+		    std::cout << SERVER << "Closing Game Thread #"
+			      << std::to_string(myConnection->getThreadNum()) << std::endl;
                     pthread_exit(NULL);
                 }
             }
@@ -419,5 +414,3 @@ void server::startGame(connection *myConnection) {
         }
     }
 }
-
-
